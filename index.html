@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="VoiceForge — Professional neural text-to-speech. Male & female voices. Download MP3. Free."/>
+  <title>VoiceForge — Neural Text to Speech</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><circle cx='20' cy='20' r='20' fill='%237c3aed'/><path d='M13 14v12M17 11v18M21 15v10M25 12v16M29 16v8' stroke='white' stroke-width='2.2' stroke-linecap='round'/></svg>"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div class="bg-mesh" aria-hidden="true">
+  <div class="mesh-orb orb-a"></div>
+  <div class="mesh-orb orb-b"></div>
+  <div class="mesh-orb orb-c"></div>
+</div>
+
+<div class="app">
+
+  <!-- ── HEADER ─────────────────────────────── -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="16" fill="url(#lg)"/><path d="M10 12v8M13 9v14M16 13v6M19 10v12M22 14v4" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><defs><linearGradient id="lg" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#7c3aed"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs></svg>
+      </div>
+      <span class="logo-word">VoiceForge</span>
+    </div>
+
+    <div class="header-right">
+      <div class="server-badge" id="server-badge">
+        <span class="badge-dot" id="badge-dot"></span>
+        <span class="badge-label" id="badge-label">Checking…</span>
+      </div>
+      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── HERO ──────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-eyebrow">
+      <span class="eyebrow-dot"></span>
+      Microsoft Neural TTS · 12 Voices · Free
+    </div>
+    <h1 class="hero-title">Turn Text &amp; PDF<br/><em class="hero-em">into Studio Audio</em></h1>
+    <p class="hero-sub">Choose a neural voice, tune the speed and pitch, generate, preview — then download your MP3.</p>
+  </section>
+
+  <!-- ── STEP 01 · INPUT ───────────────────── -->
+  <div class="step-card" id="card-input">
+    <div class="step-head">
+      <div class="step-badge">01</div>
+      <div>
+        <div class="step-title">Input</div>
+        <div class="step-desc">Type your script or upload a PDF</div>
+      </div>
+      <div class="input-mode-pills" id="input-pills">
+        <button class="mode-pill active" id="pill-text" onclick="switchTab('text')">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v2H2zM2 6h8v2H2zM2 10h10v2H2z"/></svg>
+          Text
+        </button>
+        <button class="mode-pill" id="pill-pdf" onclick="switchTab('pdf')">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M4 0a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V5.414A2 2 0 0013.414 4L10 .586A2 2 0 008.586 0H4zm4 1.5V4a1 1 0 001 1h2.5L8 1.5z" clip-rule="evenodd"/></svg>
+          PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- Text panel -->
+    <div class="panel" id="panel-text">
+      <div class="textarea-wrap">
+        <textarea id="text-input" spellcheck="true"
+          placeholder="Paste your story, script, blog post, or any text here…&#10;&#10;VoiceForge will convert it to a natural-sounding MP3 using Microsoft's neural voices."></textarea>
+        <div class="textarea-bar">
+          <span class="char-count" id="char-count">0 characters</span>
+          <div class="textarea-actions">
+            <button class="icon-btn" onclick="pasteText()" title="Paste from clipboard">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
+            </button>
+            <button class="icon-btn danger" onclick="clearText()" title="Clear text">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF panel -->
+    <div class="panel hidden" id="panel-pdf">
+      <div class="dropzone" id="dropzone"
+        ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+        onclick="document.getElementById('pdf-file').click()">
+        <input type="file" id="pdf-file" accept=".pdf" hidden onchange="handleFileSelect(event)"/>
+        <div class="drop-icon">
+          <svg viewBox="0 0 56 56" fill="none"><rect width="56" height="56" rx="14" fill="url(#dg)" opacity="0.12"/><path d="M28 10v24M18 24l10 10 10-10M12 42h32" stroke="url(#dg2)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="dg" x1="0" y1="0" x2="56" y2="56"><stop stop-color="#7c3aed"/><stop offset="1" stop-color="#2563eb"/></linearGradient><linearGradient id="dg2" x1="12" y1="10" x2="44" y2="46" gradientUnits="userSpaceOnUse"><stop stop-color="#7c3aed"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs></svg>
+        </div>
+        <div class="drop-label"><strong>Drop PDF here</strong><span>or click to browse</span></div>
+        <div class="drop-hint">Text-based PDFs · up to 50 MB</div>
+      </div>
+
+      <div class="pdf-info hidden" id="pdf-info">
+        <div class="pdf-row">
+          <div class="pdf-badge">PDF</div>
+          <div class="pdf-meta">
+            <span class="pdf-name" id="pdf-name"></span>
+            <span class="pdf-pages" id="pdf-pages"></span>
+          </div>
+          <button class="icon-btn danger" onclick="removePDF()">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+        <div class="pdf-progress hidden" id="pdf-progress">
+          <div class="pdf-progress-label">Extracting text…</div>
+          <div class="slim-bar"><div class="slim-fill" id="pdf-fill"></div></div>
+        </div>
+        <div class="pdf-preview hidden" id="pdf-preview">
+          <div class="preview-label">Extracted Preview</div>
+          <div class="preview-text" id="preview-text"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 02 · VOICE ───────────────────── -->
+  <div class="step-card" id="card-voice">
+    <div class="step-head">
+      <div class="step-badge">02</div>
+      <div>
+        <div class="step-title">Voice</div>
+        <div class="step-desc">Pick your narrator — male or female neural voice</div>
+      </div>
+      <div class="gender-pills">
+        <button class="gender-pill active" id="pill-male" onclick="showGender('male')">♂ Male</button>
+        <button class="gender-pill" id="pill-female" onclick="showGender('female')">♀ Female</button>
+      </div>
+    </div>
+    <div class="voice-grid" id="voice-grid"></div>
+    <div class="selected-voice-banner" id="selected-banner">
+      <svg viewBox="0 0 20 20" fill="currentColor" width="14"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+      Selected: <strong id="selected-voice-name">Ryan — British Male</strong>
+    </div>
+    
+    <div class="voice-actions-row">
+      <button class="btn-compare-action" id="btn-compare-action" onclick="runComparison()">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+        Compare Voices (<span id="compare-count">4</span> selected)
+      </button>
+    </div>
+  </div>
+
+  <!-- ── VOICE COMPARISON AREA ────────────── -->
+  <div class="step-card comparison-card hidden" id="card-comparison">
+    <div class="step-head">
+      <div class="step-badge success">⚡</div>
+      <div>
+        <div class="step-title">Voice Comparison</div>
+        <div class="step-desc">Listen and compare voices side-by-side using your script preview</div>
+      </div>
+      <button class="close-btn" onclick="closeComparison()">Close</button>
+    </div>
+    <div class="panel">
+      <div class="comparison-grid" id="comparison-grid"></div>
+    </div>
+  </div>
+
+  <!-- ── STEP 03 · SETTINGS ────────────────── -->
+  <div class="step-card" id="card-settings">
+    <div class="step-head">
+      <div class="step-badge">03</div>
+      <div>
+        <div class="step-title">Audio Settings</div>
+        <div class="step-desc">Tune speed, pitch, and volume — applies to the download too</div>
+      </div>
+      <button class="reset-btn" onclick="resetSettings()">Reset</button>
+    </div>
+    
+    <div class="presets-section">
+      <div class="presets-label">Voice Presets</div>
+      <div class="presets-grid" id="presets-grid"></div>
+    </div>
+    
+    <div class="sliders">
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Speed</span>
+          <span class="slider-val" id="speed-val">1.0×</span>
+        </div>
+        <div class="range-wrap">
+          <input type="range" id="speed-range" min="-75" max="100" step="1" value="0" oninput="updateSlider('speed')"/>
+          <div class="range-track-fill" id="speed-fill"></div>
+        </div>
+        <div class="slider-marks"><span>0.25×</span><span>1.0×</span><span>2.0×</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Pitch</span>
+          <span class="slider-val" id="pitch-val">0 Hz</span>
+        </div>
+        <div class="range-wrap">
+          <input type="range" id="pitch-range" min="-20" max="20" step="1" value="0" oninput="updateSlider('pitch')"/>
+          <div class="range-track-fill" id="pitch-fill"></div>
+        </div>
+        <div class="slider-marks"><span>-20Hz</span><span>0</span><span>+20Hz</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Volume</span>
+          <span class="slider-val" id="volume-val">0%</span>
+        </div>
+        <div class="range-wrap">
+          <input type="range" id="volume-range" min="-50" max="50" step="1" value="0" oninput="updateSlider('volume')"/>
+          <div class="range-track-fill" id="volume-fill"></div>
+        </div>
+        <div class="slider-marks"><span>-50%</span><span>0</span><span>+50%</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Max Chunk Size</span>
+          <span class="slider-val" id="chunk-size-val">2500 chars</span>
+        </div>
+        <div class="range-wrap">
+          <input type="range" id="chunk-size-range" min="500" max="4000" step="100" value="2500" oninput="updateSlider('chunk-size')"/>
+          <div class="range-track-fill" id="chunk-size-fill"></div>
+        </div>
+        <div class="slider-marks"><span>500</span><span>2500</span><span>4000</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GENERATE BUTTON ───────────────────── -->
+  <button class="btn-generate" id="btn-generate" onclick="generateAudio()">
+    <span class="btn-generate-inner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Generate &amp; Preview
+    </span>
+    <div class="btn-shimmer"></div>
+  </button>
+
+  <!-- ── STEP 04 · PLAYER ──────────────────── -->
+  <div class="step-card player-card hidden" id="card-player">
+    <div class="step-head">
+      <div class="step-badge success">04</div>
+      <div>
+        <div class="step-title">Preview &amp; Download</div>
+        <div class="step-desc" id="player-desc">Generating audio…</div>
+      </div>
+    </div>
+
+    <!-- Generation progress (equalizer) -->
+    <div id="gen-progress" class="gen-progress">
+      <div class="equalizer">
+        <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+        <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+        <div class="eq-bar"></div><div class="eq-bar"></div>
+      </div>
+      <div class="gen-info">
+        <div class="gen-label" id="gen-label">Connecting to server…</div>
+        <div class="slim-bar gen-bar"><div class="slim-fill" id="gen-fill"></div></div>
+        <div class="gen-pct" id="gen-pct">0%</div>
+      </div>
+    </div>
+
+    <!-- Audio player (shown after generation) -->
+    <div id="audio-ready" class="hidden">
+      <div class="player-voice-tag" id="player-voice-tag"></div>
+      <audio id="audio-player" controls></audio>
+      <div class="player-actions">
+        <button class="btn-save" id="btn-save" onclick="saveCurrentAudio()">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          Save as MP3
+        </button>
+        <button class="btn-regen" onclick="generateAudio()">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
+          Regenerate
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    VoiceForge &nbsp;·&nbsp; Microsoft Edge Neural TTS &nbsp;·&nbsp; PDF.js &nbsp;·&nbsp; 100% Free
+  </footer>
+
+</div><!-- /app -->
+
+<script src="presets.js"></script>
+<script src="comparison.js"></script>
+<script src="chunking.js"></script>
+<script src="audioPlayer.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

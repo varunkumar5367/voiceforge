@@ -1,0 +1,11 @@
+# Python caching
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Audio Cache (VoiceForge segments)
+.cache/
+
+# Local OS files
+.DS_Store
+Thumbs.db
