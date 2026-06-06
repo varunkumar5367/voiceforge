@@ -1,5 +1,7 @@
 # 🎙️ VoiceForge — Professional Neural Text-to-Speech (TTS) Studio
 
+🔗 **Live Link:** [https://voiceforge-pzxd.onrender.com](https://voiceforge-pzxd.onrender.com)
+
 VoiceForge is a modern, high-fidelity neural text-to-speech studio that turns scripts and PDF documents into natural, studio-quality narration. Powered by Microsoft Edge's Neural TTS engine, it offers regional English voices, customizable pitch/speed settings, voice comparison, and automatic audio segment chunking.
 
 ---
@@ -51,13 +53,11 @@ VoiceForge is a modern, high-fidelity neural text-to-speech studio that turns sc
 
 ## 🌐 Deploying Online (Live Link)
 
-Because VoiceForge relies on a Python backend (`edge-tts`), **you cannot deploy it as a purely static site on GitHub Pages**. 
+VoiceForge is fully deployed and running live on Render:
+- **Live URL:** [https://voiceforge-pzxd.onrender.com](https://voiceforge-pzxd.onrender.com)
 
-Instead, you can host the entire app for free on single-container cloud hosting services:
-- **Render.com** (Web Service, Web Service template automatically detects `requirements.txt` and runs `python server.py`)
-- **Railway.app** (Deploy from GitHub repository directly)
-- **Render/Railway deploy steps**:
-  1. Push code to GitHub.
-  2. Create a new Web Service pointing to your repository.
-  3. Set the start command to: `python server.py`
-  4. The platform will provide a live link (e.g. `https://voiceforge.onrender.com`).
+To host your own version:
+1. Push code to your own GitHub repository.
+2. Create a new **Web Service** on Render pointing to your repository.
+3. Render automatically detects `requirements.txt`. Set the start command to `python server.py`.
+
