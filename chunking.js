@@ -139,13 +139,13 @@ class ChunkProcessor {
       this.metrics.avgProcessingTime = sumDurations / completedTasks.length;
     }
     
-    // Estimate audio length: average speech is ~150 words/min (roughly 1000 characters).
-    // This gives 0.04s per character. Speed rate increases or decreases this duration.
+    // Estimate audio length: average neural speech speed is ~115-130 words/min (roughly 10.8 characters per second).
+    // This gives ~0.092s per character. Speed rate slider adjusts this multiplier.
     let speedPct = parseFloat(this.params.rate.replace('%', '')) || 0.0;
     let speedMultiplier = 1.0 + (speedPct / 100.0);
     if (speedMultiplier <= 0) speedMultiplier = 0.1; // Guard against division/multiplication by 0
     
-    this.metrics.audioDurationEstimate = (this.metrics.characterCount * 0.045) / speedMultiplier;
+    this.metrics.audioDurationEstimate = (this.metrics.characterCount * 0.092) / speedMultiplier;
   }
 
   stitchAudio() {
