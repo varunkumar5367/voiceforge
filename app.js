@@ -275,21 +275,51 @@ function chunkTextFallback(text, maxChars = 2500) {
 }
 
 // ── Server status ─────────────────────────────────────
+let isServerOnline = false;
+let userDismissedBanner = false;
+
 async function checkServer() {
   const badge  = document.getElementById('server-badge');
   const dot    = document.getElementById('badge-dot');
   const label  = document.getElementById('badge-label');
+  const banner = document.getElementById('cold-start-banner');
   if (!badge) return;
   
+  // Set checking visual status if we don't know it's online yet
+  if (!isServerOnline) {
+    badge.className = 'server-badge checking';
+    label.textContent = 'Checking…';
+  }
+  
   try {
-    const r = await fetch('/voices', { signal: AbortSignal.timeout(2000) });
+    const r = await fetch('/voices', { signal: AbortSignal.timeout(4000) });
     if (r.ok) {
+      isServerOnline = true;
       badge.className = 'server-badge online';
-      label.textContent = 'Server Online';
+      label.textContent = 'Online';
+      
+      // Auto-dismiss the cold start banner once the server is successfully online
+      if (banner) {
+        banner.classList.add('hidden');
+      }
     } else throw new Error();
   } catch {
+    isServerOnline = false;
     badge.className = 'server-badge offline';
-    label.textContent = 'Server Offline';
+    label.textContent = 'Starting up… (~30s)';
+    
+    // Show cold start banner if the user hasn't explicitly closed it
+    if (banner && !userDismissedBanner) {
+      banner.classList.remove('hidden');
+    }
+  }
+}
+
+function dismissColdStartBanner() {
+  userDismissedBanner = true;
+  const banner = document.getElementById('cold-start-banner');
+  if (banner) {
+    banner.classList.add('hidden');
   }
 }
 

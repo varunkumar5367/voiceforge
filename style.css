@@ -811,6 +811,70 @@ input[type="range"]::-moz-range-thumb{
   text-align:center;padding-top:24px;
   font-size:.73rem;color:var(--text-faint);
 }
+.footer a {
+  color: var(--text-muted);
+  text-decoration: underline;
+  transition: color var(--transition);
+}
+.footer a:hover {
+  color: var(--text);
+}
+
+/* ── Cold-Start Banner ──────────────────────────── */
+.cold-start-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: rgba(245, 158, 11, 0.12); /* warning amber */
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--radius-sm);
+  color: #f59e0b;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: slideDown 0.3s ease;
+}
+.banner-close {
+  background: transparent;
+  border: none;
+  color: #f59e0b;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  opacity: 0.8;
+  transition: opacity var(--transition);
+}
+.banner-close:hover {
+  opacity: 1;
+}
+
+/* ── Server Badge Pulsing Statuses ──────────────── */
+.server-badge.checking .badge-dot {
+  background: var(--text-muted);
+  box-shadow: 0 0 6px var(--text-muted);
+  animation: pulse-dot 1.2s infinite alternate;
+}
+.server-badge.offline .badge-dot {
+  background: #f59e0b; /* Yellow/amber for starting up */
+  box-shadow: 0 0 6px #f59e0b;
+  animation: pulse-dot 1.2s infinite alternate;
+}
+.server-badge.offline .badge-label {
+  color: #f59e0b;
+}
+.server-badge.checking .badge-label {
+  color: var(--text-muted);
+}
+
+@keyframes pulse-dot {
+  0% { opacity: 0.45; transform: scale(0.92); }
+  100% { opacity: 1; transform: scale(1.08); }
+}
 
 /* ── Scrollbar ───────────────────────────────────── */
 ::-webkit-scrollbar{width:5px}

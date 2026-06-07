@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="VoiceForge — Professional neural text-to-speech. Male & female voices. Download MP3. Free."/>
+  <meta name="description" content="VoiceForge — Free neural text-to-speech tool. Convert text and PDFs to MP3 audio with 12 Microsoft neural voices. Built by Varun Kumar.">
+  <meta name="author" content="Varun Kumar Singarapu">
+  <meta property="og:title" content="VoiceForge — Neural Text to Speech">
+  <meta property="og:description" content="Free TTS tool with 12 neural voices. Built by Varun Kumar.">
+  <meta property="og:url" content="https://voiceforge-pzxd.onrender.com">
   <title>VoiceForge — Neural Text to Speech</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><circle cx='20' cy='20' r='20' fill='%237c3aed'/><path d='M13 14v12M17 11v18M21 15v10M25 12v16M29 16v8' stroke='white' stroke-width='2.2' stroke-linecap='round'/></svg>"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -43,6 +47,12 @@
     </div>
   </header>
 
+  <!-- ── COLD START BANNER ──────────────────────── -->
+  <div id="cold-start-banner" class="cold-start-banner hidden">
+    <span>⚡ First load may take 20–40 seconds — Render free tier wakes up on demand. Please wait!</span>
+    <button class="banner-close" onclick="dismissColdStartBanner()" aria-label="Close banner">×</button>
+  </div>
+
   <!-- ── HERO ──────────────────────────────── -->
   <section class="hero">
     <div class="hero-eyebrow">
@@ -50,7 +60,7 @@
       Microsoft Neural TTS · 12 Voices · Free
     </div>
     <h1 class="hero-title">Turn Text &amp; PDF<br/><em class="hero-em">into Studio Audio</em></h1>
-    <p class="hero-sub">Choose a neural voice, tune the speed and pitch, generate, preview — then download your MP3.</p>
+    <p class="hero-sub">Convert your text and PDFs into natural-sounding audio using Microsoft's neural voices. Free, no login required — just paste, pick a voice, and download.</p>
   </section>
 
   <!-- ── STEP 01 · INPUT ───────────────────── -->
@@ -286,6 +296,10 @@
 
   <footer class="footer">
     VoiceForge &nbsp;·&nbsp; Microsoft Edge Neural TTS &nbsp;·&nbsp; PDF.js &nbsp;·&nbsp; 100% Free
+    <div class="attribution" style="margin-top: 8px; font-size: 0.72rem;">
+      Built by <a href="https://github.com/varunkumar5367" target="_blank" rel="noopener noreferrer">Varun Kumar</a> &nbsp;·&nbsp;
+      <a href="https://linkedin.com/in/varun-kumar-singarapu-5367g" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+    </div>
   </footer>
 
 </div><!-- /app -->
