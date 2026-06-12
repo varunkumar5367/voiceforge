@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-VoiceForge TTS Server — Thread-safe HTTP Server
-Integrates modular chunking, caching, stats, and tts_service.
+VoiceForge TTS Server — FastAPI Implementation
+Provides TTS generation, chunking, caching, stats, and StoryForge API integration.
 
 Run:   python server.py
 Open:  http://localhost:8080
 """
 
-import io
 import os
 import sys
-import json
 import time
-import asyncio
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
-from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+
+from fastapi import FastAPI, Form, Response, Query, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 # Import modular helper services
 from chunker import split_text_into_chunks
@@ -58,196 +58,140 @@ VOICES = {
     "en-in-female": "en-IN-NeerjaNeural",
 }
 
-class Handler(BaseHTTPRequestHandler):
-    def log_message(self, fmt, *args):
-        code = args[1] if len(args) > 1 else "?"
-        icon = "✅" if str(code).startswith("2") else "⚠️"
-        print(f"  {icon} {getattr(self, 'command', '?')} {self.path} → {code}")
+app = FastAPI(title="VoiceForge API")
 
-    def do_OPTIONS(self):
-        self.send_response(204)
-        self._cors()
-        self.end_headers()
+# ── Update 2: CORS Middleware ───────────────────────────
+# StoryForge backend (on Render) needs to call VoiceForge (on Render)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # restrict to your StoryForge URL later
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
 
-    def do_GET(self):
-        p = urlparse(self.path)
-        q = parse_qs(p.query)
-
-        if p.path == "/tts":
-            self._handle_tts_get(q)
-            return
-
-        if p.path == "/voices":
-            d = json.dumps(VOICES).encode()
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(d)))
-            self._cors()
-            self.end_headers()
-            self.wfile.write(d)
-            return
-
-        if p.path == "/stats":
-            d = json.dumps(tracker.get_stats()).encode()
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(d)))
-            self._cors()
-            self.end_headers()
-            self.wfile.write(d)
-            return
-
-        self._file(p.path if p.path != "/" else "/index.html")
-
-    def do_POST(self):
-        p = urlparse(self.path)
-        l = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(l)
-
-        if p.path == "/chunk":
-            self._handle_chunk_post(body)
-            return
-
-        if p.path == "/tts":
-            self._handle_tts_post(body)
-            return
-
-        self._raw(404, b"Not found")
-
-    def _handle_chunk_post(self, body):
-        try:
-            d = json.loads(body)
-        except Exception:
-            d = {}
+async def _tts_core(text: str, voice_id: str, rate: str, pitch: str, volume: str):
+    # Retrieve voice name, default to Ryan Neural if not found or if already a full name
+    voice = VOICES.get(voice_id, voice_id)
+    if voice not in VOICES.values() and voice_id not in VOICES:
+        voice = "en-GB-RyanNeural"
         
-        text = d.get("text", "").strip()
-        max_len = int(d.get("max_len", 2500))
+    # 1. Check disk cache
+    cached_data = cache_manager.get_cached_audio(text, voice, rate, pitch, volume)
+    if cached_data is not None:
+        tracker.record_generation(len(text), 0.0, is_cache_hit=True)
+        print(f"  ⚡  Cache Hit: {len(cached_data)//1024}KB [{voice}]")
+        return cached_data
 
-        # Perform intelligent text split
-        chunks = split_text_into_chunks(text, max_len)
-        res_data = json.dumps({"chunks": chunks}).encode("utf-8")
+    # 2. Cache Miss - Generate dynamically via edge-tts
+    start_time = time.time()
+    try:
+        data = await generate_audio_stream(text, voice, rate, pitch, volume)
+        if not data or len(data) < 50:
+            raise ValueError("Empty or invalid audio generated.")
 
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(res_data)))
-        self._cors()
-        self.end_headers()
-        self.wfile.write(res_data)
-
-    def _handle_tts_get(self, q):
-        text = q.get("text", [""])[0].strip()
-        voice_id = q.get("voice", ["en-gb-male"])[0]
-        rate = q.get("rate", ["+0%"])[0]
-        pitch = q.get("pitch", ["+0Hz"])[0]
-        volume = q.get("volume", ["+0%"])[0]
-        self._tts(text, voice_id, rate, pitch, volume)
-
-    def _handle_tts_post(self, body):
-        try:
-            d = json.loads(body)
-        except Exception:
-            d = {}
+        duration = time.time() - start_time
         
-        text = d.get("text", "").strip()
-        voice_id = d.get("voice", "en-gb-male")
-        rate = d.get("rate", "+0%")
-        pitch = d.get("pitch", "+0Hz")
-        volume = d.get("volume", "+0%")
-        self._tts(text, voice_id, rate, pitch, volume)
+        # Save to cache
+        cache_manager.save_to_cache(text, voice, rate, pitch, volume, data)
+        tracker.record_generation(len(text), duration, is_cache_hit=False)
+        print(f"  🎙   Generated: {len(data)//1024}KB [{voice}] rate={rate} pitch={pitch} ({duration:.2f}s)")
+        return data
+    except Exception as e:
+        print(f"  ❌ Generation Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-    def _tts(self, text, voice_id, rate, pitch, volume):
-        if not text:
-            self._raw(400, b"No text provided")
-            return
+# ── API Endpoints ───────────────────────────────────────
 
-        v = VOICES.get(voice_id, "en-GB-RyanNeural")
-        
-        # 1. Check disk cache
-        cached_data = cache_manager.get_cached_audio(text, v, rate, pitch, volume)
-        if cached_data is not None:
-            # Record metrics as a cache hit
-            tracker.record_generation(len(text), 0.0, is_cache_hit=True)
-            
-            self.send_response(200)
-            self.send_header("Content-Type", "audio/mpeg")
-            self.send_header("Content-Length", str(len(cached_data)))
-            self._cors()
-            self.end_headers()
-            self.wfile.write(cached_data)
-            print(f"  ⚡  Cache Hit: {len(cached_data)//1024}KB [{v}]")
-            return
+# ── Update 4: Health check ──────────────────────────────
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
 
-        # 2. Cache Miss - Generate dynamically via edge-tts
-        start_time = time.time()
-        try:
-            # Run the coroutine in a synchronous loop context
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                data = loop.run_until_complete(
-                    generate_audio_stream(text, v, rate, pitch, volume)
-                )
-            finally:
-                loop.close()
+# ── Update 3: Voice List ────────────────────────────────
+@app.get("/api/voices")
+def get_voices():
+    return {
+        "voices": [
+            {"id": "en-GB-RyanNeural", "name": "Ryan", "gender": "male"},
+            {"id": "en-US-GuyNeural", "name": "Guy", "gender": "male"},
+            {"id": "en-AU-WilliamNeural", "name": "William", "gender": "male"},
+            {"id": "en-CA-LiamNeural", "name": "Liam", "gender": "male"},
+            {"id": "en-IE-ConnorNeural", "name": "Connor", "gender": "male"},
+            {"id": "en-IN-PrabhatNeural", "name": "Prabhat", "gender": "male"},
+            {"id": "en-GB-SoniaNeural", "name": "Sonia", "gender": "female"},
+            {"id": "en-US-JennyNeural", "name": "Jenny", "gender": "female"},
+            {"id": "en-US-AriaNeural", "name": "Aria", "gender": "female"},
+            {"id": "en-AU-NatashaNeural", "name": "Natasha", "gender": "female"},
+            {"id": "en-CA-ClaraNeural", "name": "Clara", "gender": "female"},
+            {"id": "en-IN-NeerjaNeural", "name": "Neerja", "gender": "female"}
+        ]
+    }
 
-            if not data or len(data) < 50:
-                raise ValueError("Empty or invalid audio generated.")
+# ── Update 1: Form-based TTS API ────────────────────────
+@app.post("/api/tts")
+async def tts_api(
+    text: str = Form(...),
+    voice: str = Form(default="en-GB-RyanNeural"),
+    speed: float = Form(default=1.0),
+    pitch: int = Form(default=0)
+):
+    # Map speed multiplier to relative percentage format (e.g. 1.05 -> "+5%", 0.85 -> "-15%")
+    pct = int(round((speed - 1.0) * 100))
+    rate_str = f"{pct:+}%"
+    
+    # Map pitch to signed Hz format (e.g. 2 -> "+2Hz", 0 -> "+0Hz")
+    pitch_str = f"{pitch:+}Hz"
+    
+    audio_bytes = await _tts_core(text, voice, rate_str, pitch_str, "+0%")
+    return Response(content=audio_bytes, media_type="audio/mpeg")
 
-            duration = time.time() - start_time
-            
-            # Save to cache
-            cache_manager.save_to_cache(text, v, rate, pitch, volume, data)
-            
-            # Record statistics
-            tracker.record_generation(len(text), duration, is_cache_hit=False)
+# ── Legacy Endpoints (For VoiceForge UI) ────────────────
 
-            self.send_response(200)
-            self.send_header("Content-Type", "audio/mpeg")
-            self.send_header("Content-Length", str(len(data)))
-            self._cors()
-            self.end_headers()
-            self.wfile.write(data)
-            print(f"  🎙   Generated: {len(data)//1024}KB [{v}] rate={rate} pitch={pitch} ({duration:.2f}s)")
-            
-        except Exception as e:
-            print(f"  ❌ Generation Error: {e}")
-            self._raw(500, str(e).encode())
+@app.get("/voices")
+def get_legacy_voices():
+    return VOICES
 
-    def _file(self, path):
-        try:
-            # Resolve the absolute path to prevent path traversal (../)
-            fp = (ROOT / path.lstrip("/")).resolve()
-            # Ensure the resolved file path starts with the ROOT path
-            if ROOT.resolve() in fp.parents and fp.is_file():
-                d = fp.read_bytes()
-                self.send_response(200)
-                self.send_header("Content-Type", MIME.get(fp.suffix.lower(), "application/octet-stream"))
-                self.send_header("Content-Length", str(len(d)))
-                self._cors()
-                self.end_headers()
-                self.wfile.write(d)
-                return
-        except Exception as e:
-            print(f"  ⚠️ File read error: {e}")
-            
-        self._raw(404, b"Not found")
+class ChunkRequest(BaseModel):
+    text: str
+    max_len: int = 2500
 
-    def _cors(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+@app.post("/chunk")
+def post_chunk(req: ChunkRequest):
+    chunks = split_text_into_chunks(req.text, req.max_len)
+    return {"chunks": chunks}
 
-    def _raw(self, code, body):
-        self.send_response(code)
-        self._cors()
-        self.end_headers()
-        self.wfile.write(body)
+@app.get("/tts")
+async def get_legacy_tts(
+    text: str = Query(...),
+    voice: str = Query("en-gb-male"),
+    rate: str = Query("+0%"),
+    pitch: str = Query("+0Hz"),
+    volume: str = Query("+0%")
+):
+    data = await _tts_core(text, voice, rate, pitch, volume)
+    return Response(content=data, media_type="audio/mpeg")
+
+class TTSRequest(BaseModel):
+    text: str
+    voice: str = "en-gb-male"
+    rate: str = "+0%"
+    pitch: str = "+0Hz"
+    volume: str = "+0%"
+
+@app.post("/tts")
+async def post_legacy_tts(req: TTSRequest):
+    data = await _tts_core(req.text, req.voice, req.rate, req.pitch, req.volume)
+    return Response(content=data, media_type="audio/mpeg")
+
+@app.get("/stats")
+def get_stats():
+    return tracker.get_stats()
+
+# Serve static web UI files at root last
+app.mount("/", StaticFiles(directory=str(ROOT), html=True), name="static")
 
 if __name__ == "__main__":
-    # Use ThreadingHTTPServer to handle requests concurrently
-    server = ThreadingHTTPServer(("", PORT), Handler)
-    print(f"\n╔══════════════════════════════════╗\n║  🎙  VoiceForge · Neural TTS     ║\n║  http://localhost:{PORT}            ║\n╚══════════════════════════════════╝\n")
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\n  ⏹  Stopped.\n")
+    import uvicorn
+    print(f"\n╔══════════════════════════════════╗\n║  🎙  VoiceForge (FastAPI)        ║\n║  http://localhost:{PORT}            ║\n╚══════════════════════════════════╝\n")
+    uvicorn.run("server:app", host="0.0.0.0", port=PORT, reload=False)
